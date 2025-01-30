@@ -1,0 +1,80 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+
+# Read the Excel file
+try:
+    df = pd.read_excel(r"C:\Users\Kishore\Downloads\Kathirvelan\research_survey_results_1.xlsx")
+except FileNotFoundError:
+    print("Error: File not found. Please check the file path.")
+    exit()
+
+# Convert categorical variables to numerical using LabelEncoder
+le = LabelEncoder()
+categorical_columns = ['research_topic', 'experience_level', 'research_field', 
+                      'primary_challenge', 'perceived_benefit', 'collaborates_frequently']
+for col in categorical_columns:
+    df[col] = le.fit_transform(df[col].astype(str))
+
+# Ensure numeric columns are properly converted
+df['platform_needed_rating'] = pd.to_numeric(df['platform_needed_rating'], errors='coerce')
+df['current_collaboration_satisfaction'] = pd.to_numeric(df['current_collaboration_satisfaction'], errors='coerce')
+
+# Remove any rows with NaN values
+df = df.dropna(subset=['experience_level', 'collaborates_frequently', 'platform_needed_rating', 'current_collaboration_satisfaction'])
+
+# Define features (X) and target variable (y)
+X = df[['experience_level', 'collaborates_frequently', 'platform_needed_rating']]
+y = df['current_collaboration_satisfaction']
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Create and fit the regression model
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Create a figure with multiple subplots
+plt.figure(figsize=(15, 10))
+
+# Plot 1: Feature Importance Bar Plot
+plt.subplot(2, 2, 1)
+features = ['Experience Level', 'Collaboration Frequency', 'Platform Need Rating']
+importance = abs(model.coef_)
+sns.barplot(x=features, y=importance)
+plt.title('Feature Importance')
+plt.xticks(rotation=45)
+
+# Plot 2: Actual vs Predicted Values
+plt.subplot(2, 2, 2)
+y_pred = model.predict(X_test)
+plt.scatter(y_test, y_pred)
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+plt.xlabel('Actual Values')
+plt.ylabel('Predicted Values')
+plt.title('Actual vs Predicted Collaboration Satisfaction')
+
+# Plot 3: Correlation Heatmap
+plt.subplot(2, 2, 3)
+correlation_matrix = df[['experience_level', 'collaborates_frequently', 
+                        'platform_needed_rating', 'current_collaboration_satisfaction']].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+
+# Plot 4: Distribution of Collaboration Satisfaction
+plt.subplot(2, 2, 4)
+sns.histplot(data=df, x='current_collaboration_satisfaction', bins=20)
+plt.title('Distribution of Collaboration Satisfaction')
+
+plt.tight_layout()
+plt.show()
+
+# Print model performance metrics
+print(f"Model Score (R²): {model.score(X_test, y_test):.4f}")
+print("\nFeature Importance:")
+for feature, coef in zip(features, importance):
+    print(f"{feature}: {coef:.4f}")
