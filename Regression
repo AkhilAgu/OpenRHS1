@@ -8,7 +8,7 @@ from sklearn.preprocessing import LabelEncoder
 
 # Read the Excel file
 try:
-    df = pd.read_excel(r"C:\Users\Kishore\Downloads\Kathirvelan\research_survey_results_1.xlsx")
+    df = pd.read_excel(r"C:\Users\Akhil\Downloads\Jojo\research_survey_results_1.xlsx")
 except FileNotFoundError:
     print("Error: File not found. Please check the file path.")
     exit()
